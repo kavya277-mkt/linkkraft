@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkKraft - UTM Link Builder</title>
+  <meta name="description" content="Build clean, consistent UTM links in seconds. Free UTM link builder with platform presets, bulk mode, and history.">
+  <meta name="author" content="Kavya Pandey-Tiwari">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    :root {
+      /* Teal accent */
+      --accent: #0d9488;
+      --accent-light: #14b8a6;
+      --accent-glow: rgba(13, 148, 136, 0.3);
+      --accent-surface: rgba(13, 148, 136, 0.1);
+      
+      /* Glass - Light Mode */
+      --glass-bg: rgba(255, 255, 255, 0.6);
+      --glass-bg-subtle: rgba(255, 255, 255, 0.4);
+      --glass-border: rgba(255, 255, 255, 0.7);
+      --glass-border-subtle: rgba(255, 255, 255, 0.4);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      --glass-blur: 24px;
+      --glass-highlight: rgba(255, 255, 255, 0.8);
+      
+      /* Text - Light Mode */
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      
+      /* Input backgrounds */
+      --input-bg: rgba(255, 255, 255, 0.6);
+      
+      /* Layout */
+      --radius: 16px;
+      --radius-lg: 24px;
+      --radius-pill: 100px;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        /* Brighter accent for dark mode */
+        --accent: #2dd4bf;
+        --accent-light: #5eead4;
+        --accent-glow: rgba(45, 212, 191, 0.35);
+        --accent-surface: rgba(45, 212, 191, 0.15);
+        
+        /* Glass - Dark Mode - MORE TRANSPARENT, more visible borders */
+        --glass-bg: rgba(255, 255, 255, 0.08);
+        --glass-bg-subtle: rgba(255, 255, 255, 0.04);
+        --glass-border: rgba(255, 255, 255, 0.15);
+        --glass-border-subtle: rgba(255, 255, 255, 0.1);
+        --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        --glass-highlight: rgba(255, 255, 255, 0.1);
+        
+        /* Text - Dark Mode */
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #64748b;
+        
+        /* Input backgrounds */
+        --input-bg: rgba(255, 255, 255, 0.06);
+      }
+    }
+    
+    body {
+      font-family: 'Sora', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 40px 20px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      
+      /* Light mode: Warm cream/mint gradient */
+      background: 
+        radial-gradient(ellipse at 0% 0%, rgba(251, 191, 36, 0.18) 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 100%, rgba(13, 148, 136, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(251, 113, 133, 0.1) 0%, transparent 60%),
+        linear-gradient(160deg, #fefce8 0%, #f0fdfa 50%, #ecfeff 100%);
+      background-attachment: fixed;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      body {
+        /* Dark mode: Rich gradient with visible color orbs */
+        background: 
+          radial-gradient(ellipse at 0% 20%, rgba(251, 191, 36, 0.15) 0%, transparent 45%),
+          radial-gradient(ellipse at 100% 80%, rgba(45, 212, 191, 0.2) 0%, transparent 45%),
+          radial-gradient(ellipse at 40% 60%, rgba(251, 113, 133, 0.1) 0%, transparent 50%),
+          linear-gradient(160deg, #0a0f1a 0%, #111827 50%, #0f172a 100%);
+        background-attachment: fixed;
+      }
+    }
+    
+    .container {
+      max-width: 440px;
+      margin: 0 auto;
+    }
+    
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    
+    .logo-mark {
+      width: 56px;
+      height: 56px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      box-shadow: var(--glass-shadow);
+      position: relative;
+    }
+    
+    .logo-mark::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--glass-highlight) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .logo-mark svg {
+      width: 26px;
+      height: 26px;
+      color: var(--accent);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header h1 {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 2px;
+    }
+    
+    .header p {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      letter-spacing: -0.01em;
+    }
+    
+    /* Main Card */
+    .card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      box-shadow: var(--glass-shadow);
+      position: relative;
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--glass-bg-subtle);
+      border: 1px solid var(--glass-border-subtle);
+      border-radius: var(--radius-pill);
+      margin-bottom: 24px;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      letter-spacing: -0.01em;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .tab.active {
+      background: var(--glass-bg);
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border: 1px solid var(--glass-border-subtle);
+    }
+    
+    .tab:not(.active):hover {
+      color: var(--text-secondary);
+    }
+    
+    /* Form */
+    .field {
+      margin-bottom: 18px;
+    }
+    
+    .field:last-child {
+      margin-bottom: 0;
+    }
+    
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      letter-spacing: 0.01em;
+    }
+    
+    .field-label .req {
+      color: var(--accent);
+    }
+    
+    .input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      border: 1px solid var(--glass-border-subtle);
+      border-radius: 12px;
+      background: var(--input-bg);
+      color: var(--text-primary);
+      transition: all 0.15s ease;
+    }
+    
+    .input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    
+    .input::placeholder {
+      color: var(--text-muted);
+    }
+    
+    textarea.input {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.5;
+    }
+    
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    /* Presets */
+    .presets {
+      margin-bottom: 20px;
+    }
+    
+    .presets-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    
+    .chip {
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      letter-spacing: -0.01em;
+      border: 1px solid var(--glass-border-subtle);
+      background: var(--glass-bg-subtle);
+      color: var(--text-secondary);
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-surface);
+    }
+    
+    .chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      box-shadow: 0 2px 12px var(--accent-glow);
+    }
+    
+    /* Optional toggle */
+    .optional-section {
+      margin-bottom: 20px;
+    }
+    
+    .optional-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      width: 100%;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px dashed var(--glass-border-subtle);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .optional-toggle:hover {
+      border-color: var(--glass-border);
+      color: var(--text-secondary);
+    }
+    
+    .optional-toggle svg {
+      width: 14px;
+      height: 14px;
+      transition: transform 0.2s ease;
+    }
+    
+    .optional-toggle.open svg {
+      transform: rotate(180deg);
+    }
+    
+    .optional-content {
+      display: none;
+      padding-top: 14px;
+    }
+    
+    .optional-content.show {
+      display: block;
+    }
+    
+    /* Generate Button */
+    .btn-primary {
+      width: 100%;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      letter-spacing: -0.01em;
+      border: none;
+      background: var(--accent);
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px var(--accent-glow);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    /* Output */
+    .output-area {
+      margin-top: 20px;
+      display: none;
+    }
+    
+    .output-area.show {
+      display: block;
+    }
+    
+    .output-box {
+      background: var(--accent-surface);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px;
+      position: relative;
+    }
+    
+    .output-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 16px;
+      right: 16px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-light), transparent);
+      opacity: 0.5;
+    }
+    
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .output-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: inherit;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--text-secondary);
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .btn-copy:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    
+    .btn-copy.copied {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    
+    .btn-copy svg {
+      width: 12px;
+      height: 12px;
+    }
+    
+    .output-link {
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 11px;
+      word-break: break-all;
+      line-height: 1.6;
+      padding: 10px 12px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border-subtle);
+      border-radius: 10px;
+      margin-bottom: 6px;
+    }
+    
+    .output-link:last-child {
+      margin-bottom: 0;
+    }
+    
+    /* History */
+    .history-area {
+      margin-top: 20px;
+      display: none;
+    }
+    
+    .history-area.show {
+      display: block;
+    }
+    
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .history-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    
+    .btn-clear {
+      font-size: 11px;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+    
+    .btn-clear:hover {
+      color: #f87171;
+      background: rgba(248, 113, 113, 0.1);
+    }
+    
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--glass-bg-subtle);
+      border: 1px solid var(--glass-border-subtle);
+      border-radius: 10px;
+    }
+    
+    .history-item span {
+      flex: 1;
+      font-family: 'SF Mono', ui-monospace, monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .history-item button {
+      padding: 5px 10px;
+      font-size: 10px;
+      font-weight: 500;
+      font-family: inherit;
+      border: 1px solid var(--glass-border-subtle);
+      background: var(--glass-bg);
+      color: var(--text-secondary);
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .history-item button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    
+    /* Error */
+    .error {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      border-radius: 10px;
+    }
+    
+    .error.show {
+      display: flex;
+    }
+    
+    .error svg {
+      width: 16px;
+      height: 16px;
+      color: #f87171;
+      flex-shrink: 0;
+    }
+    
+    .error span {
+      font-size: 12px;
+      font-weight: 500;
+      color: #ef4444;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      .error span {
+        color: #fca5a5;
+      }
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 28px;
+    }
+    
+    .footer p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s ease;
+    }
+    
+    .footer a:hover {
+      color: var(--accent);
+    }
+    
+    /* Mobile */
+    @media (max-width: 480px) {
+      body {
+        padding: 24px 16px;
+      }
+      
+      .card {
+        padding: 22px;
+        border-radius: 20px;
+      }
+      
+      .field-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+      </div>
+      <h1>LinkKraft</h1>
+      <p>UTM links, crafted with care</p>
+    </header>
+    
+    <main class="card">
+      <div class="tabs">
+        <button class="tab active" id="tab-single" onclick="setMode('single')">Single URL</button>
+        <button class="tab" id="tab-bulk" onclick="setMode('bulk')">Bulk mode</button>
+      </div>
+      
+      <div class="error" id="error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span id="error-text"></span>
+      </div>
+      
+      <div id="mode-single">
+        <div class="field">
+          <label class="field-label">Destination URL<span class="req">*</span></label>
+          <input type="url" class="input" id="url" placeholder="https://yoursite.com/page">
+        </div>
+      </div>
+      
+      <div id="mode-bulk" style="display:none;">
+        <div class="field">
+          <label class="field-label">URLs (one per line)<span class="req">*</span></label>
+          <textarea class="input" id="bulk-urls" placeholder="https://yoursite.com/page1&#10;https://yoursite.com/page2"></textarea>
+        </div>
+      </div>
+      
+      <div class="presets">
+        <div class="presets-label">Quick presets</div>
+        <div class="chips">
+          <button class="chip" onclick="preset('linkedin','social',this)">LinkedIn</button>
+          <button class="chip" onclick="preset('facebook','social',this)">Facebook</button>
+          <button class="chip" onclick="preset('google','cpc',this)">Google Ads</button>
+          <button class="chip" onclick="preset('twitter','social',this)">Twitter/X</button>
+          <button class="chip" onclick="preset('email','email',this)">Email</button>
+          <button class="chip" onclick="preset('tiktok','social',this)">TikTok</button>
+        </div>
+      </div>
+      
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Source<span class="req">*</span></label>
+          <input type="text" class="input" id="source" placeholder="linkedin">
+        </div>
+        <div class="field">
+          <label class="field-label">Medium<span class="req">*</span></label>
+          <input type="text" class="input" id="medium" placeholder="social">
+        </div>
+      </div>
+      
+      <div class="field">
+        <label class="field-label">Campaign<span class="req">*</span></label>
+        <input type="text" class="input" id="campaign" placeholder="spring_sale">
+      </div>
+      
+      <div class="optional-section">
+        <button class="optional-toggle" id="opt-toggle" onclick="toggleOpt()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+          Optional parameters
+        </button>
+        <div class="optional-content" id="opt-content">
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">Term</label>
+              <input type="text" class="input" id="term" placeholder="keyword">
+            </div>
+            <div class="field">
+              <label class="field-label">Content</label>
+              <input type="text" class="input" id="content" placeholder="header_cta">
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <button class="btn-primary" onclick="generate()">Generate link</button>
+      
+      <div class="output-area" id="output-area">
+        <div class="output-box">
+          <div class="output-header">
+            <span class="output-label">Your UTM link</span>
+            <button class="btn-copy" id="copy-btn" onclick="copyOutput()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              Copy
+            </button>
+          </div>
+          <div id="output"></div>
+        </div>
+      </div>
+      
+      <div class="history-area" id="history-area">
+        <div class="history-header">
+          <span class="history-label">Recent links</span>
+          <button class="btn-clear" onclick="clearHist()">Clear</button>
+        </div>
+        <div class="history-list" id="history-list"></div>
+      </div>
+    </main>
+    
+    <footer class="footer">
+      <p>Built by <a href="#">Kavya Pandey-Tiwari</a></p>
+    </footer>
+  </div>
+  
+  <script>
+    let mode = 'single', hist = [];
+    try { hist = JSON.parse(localStorage.getItem('lk-hist')) || []; renderHist(); } catch(e) {}
+    
+    function setMode(m) {
+      mode = m;
+      document.getElementById('mode-single').style.display = m === 'single' ? 'block' : 'none';
+      document.getElementById('mode-bulk').style.display = m === 'bulk' ? 'block' : 'none';
+      document.getElementById('tab-single').classList.toggle('active', m === 'single');
+      document.getElementById('tab-bulk').classList.toggle('active', m === 'bulk');
+      hideErr();
+    }
+    
+    function preset(s, m, btn) {
+      document.getElementById('source').value = s;
+      document.getElementById('medium').value = m;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      hideErr();
+    }
+    
+    function toggleOpt() {
+      document.getElementById('opt-toggle').classList.toggle('open');
+      document.getElementById('opt-content').classList.toggle('show');
+    }
+    
+    function san(s) { return s.toLowerCase().trim().replace(/\s+/g,'_').replace(/[^a-z0-9_-]/g,''); }
+    
+    function showErr(msg) {
+      document.getElementById('error-text').textContent = msg;
+      document.getElementById('error').classList.add('show');
+    }
+    
+    function hideErr() { document.getElementById('error').classList.remove('show'); }
+    
+    function generate() {
+      hideErr();
+      const src = san(document.getElementById('source').value);
+      const med = san(document.getElementById('medium').value);
+      const camp = san(document.getElementById('campaign').value);
+      const term = san(document.getElementById('term').value);
+      const cont = san(document.getElementById('content').value);
+      
+      if (!src || !med || !camp) return showErr('Please fill in source, medium, and campaign.');
+      
+      let urls = [];
+      if (mode === 'single') {
+        const u = document.getElementById('url').value.trim();
+        if (!u) return showErr('Please enter a destination URL.');
+        if (!u.startsWith('http://') && !u.startsWith('https://')) return showErr('URL must start with http:// or https://');
+        urls = [u];
+      } else {
+        urls = document.getElementById('bulk-urls').value.split('\n').map(u => u.trim()).filter(u => u);
+        if (!urls.length) return showErr('Please enter at least one URL.');
+        if (urls.some(u => !u.startsWith('http://') && !u.startsWith('https://'))) return showErr('All URLs must start with http:// or https://');
+      }
+      
+      const p = new URLSearchParams();
+      p.set('utm_source', src);
+      p.set('utm_medium', med);
+      p.set('utm_campaign', camp);
+      if (term) p.set('utm_term', term);
+      if (cont) p.set('utm_content', cont);
+      
+      const results = urls.map(u => u + (u.includes('?') ? '&' : '?') + p.toString());
+      
+      document.getElementById('output').innerHTML = results.map(r => `<div class="output-link">${r}</div>`).join('');
+      document.getElementById('output-area').classList.add('show');
+      
+      results.forEach(r => {
+        const i = hist.indexOf(r);
+        if (i > -1) hist.splice(i, 1);
+        hist.unshift(r);
+        if (hist.length > 10) hist.pop();
+      });
+      try { localStorage.setItem('lk-hist', JSON.stringify(hist)); } catch(e) {}
+      renderHist();
+    }
+    
+    function copyOutput() {
+      const txt = [...document.querySelectorAll('.output-link')].map(e => e.textContent).join('\n');
+      navigator.clipboard.writeText(txt).then(() => {
+        const b = document.getElementById('copy-btn');
+        b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+        b.classList.add('copied');
+        setTimeout(() => {
+          b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+          b.classList.remove('copied');
+        }, 1500);
+      });
+    }
+    
+    function renderHist() {
+      const w = document.getElementById('history-area');
+      const l = document.getElementById('history-list');
+      if (!hist.length) { w.classList.remove('show'); return; }
+      w.classList.add('show');
+      l.innerHTML = hist.map((h,i) => `<div class="history-item"><span>${h}</span><button onclick="copyHist(${i},this)">Copy</button></div>`).join('');
+    }
+    
+    function copyHist(i, btn) {
+      navigator.clipboard.writeText(hist[i]).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 1000);
+      });
+    }
+    
+    function clearHist() {
+      hist = [];
+      try { localStorage.removeItem('lk-hist'); } catch(e) {}
+      renderHist();
+    }
+    
+    document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') generate(); });
+  </script>
+</body>
+</html>
